@@ -1,4 +1,4 @@
-module github.com/tsebro/network-intrusion-detection-platform
+module github.com/hazaaalghalibi/network-intrusion-detection-platform
 
 go 1.24
 
