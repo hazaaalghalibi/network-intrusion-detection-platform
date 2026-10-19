@@ -1,0 +1,33 @@
+title: Potential Port Scan via Zeek conn.log
+id: 8f1a1e2e-1b3a-4b1a-9c1a-000000000001
+status: stable
+description: >
+  A single source contacts many distinct destination ports within a short
+  window with unanswered/rejected connections — the classic port-scan /
+  network-recon signature. Implemented in this project as
+  internal/detect/portscan.go using a Redis sorted set keyed by source IP
+  (member = dst_ip:dst_port, score = event timestamp) rather than a live
+  Sigma backend; this file documents the equivalent detection logic in
+  vendor-neutral form.
+author: NIDR platform (demo)
+date: 2026/06/30
+references:
+  - go/internal/detect/portscan.go
+logsource:
+  category: network_connection
+  product: zeek
+  service: conn
+detection:
+  selection:
+    conn_state:
+      - 'S0'
+      - 'REJ'
+  timeframe: 60s
+  condition: selection | count(distinct dst_ip, dst_port) by src_ip > 12
+falsepositives:
+  - Authorized vulnerability scanners
+  - Network monitoring / asset discovery tools
+level: medium
+tags:
+  - attack.discovery
+  - attack.t1046

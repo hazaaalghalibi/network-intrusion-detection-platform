@@ -1,0 +1,40 @@
+{
+  "index_patterns": ["alerts-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+        "id":              { "type": "keyword" },
+        "created_at":      { "type": "date" },
+        "alert_type":      { "type": "keyword" },
+        "severity":        { "type": "keyword" },
+        "title":           {
+          "type": "text",
+          "fields": { "keyword": { "type": "keyword", "ignore_above": 256 } }
+        },
+        "description":     { "type": "text" },
+        "src_ip":          { "type": "ip" },
+        "dst_ip":          { "type": "ip" },
+        "dst_port":        { "type": "integer" },
+        "asset_hostname":  { "type": "keyword" },
+        "event_count":     { "type": "integer" },
+        "threat_intel": {
+          "type": "nested",
+          "properties": {
+            "indicator":      { "type": "keyword" },
+            "indicator_type": { "type": "keyword" },
+            "category":       { "type": "keyword" },
+            "source":         { "type": "keyword" },
+            "confidence":     { "type": "keyword" }
+          }
+        },
+        "source_refs":     { "type": "keyword" },
+        "status":          { "type": "keyword" },
+        "updated_at":      { "type": "date" }
+      }
+    }
+  }
+}

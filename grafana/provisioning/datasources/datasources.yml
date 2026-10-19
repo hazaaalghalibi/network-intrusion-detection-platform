@@ -1,0 +1,37 @@
+apiVersion: 1
+
+datasources:
+  # Primary datasource for the SOC dashboards: every alert (with its
+  # threat-intel enrichment as JSONB) lands here via cmd/worker, so all six
+  # required dashboard views (alerts over time, top suspicious IPs, affected
+  # hosts, alert types, severity breakdown, TI matches) can be built as
+  # plain, reliable SQL.
+  - name: PostgreSQL
+    uid: postgres-nidr
+    type: postgres
+    access: proxy
+    url: postgres:5432
+    database: nidr
+    user: nidr
+    secureJsonData:
+      password: nidr_dev_password
+    jsonData:
+      sslmode: disable
+      postgresVersion: 1600
+    isDefault: true
+    editable: true
+
+  # Raw normalized events (Zeek + Suricata), for ad-hoc analyst search /
+  # drill-down beyond what the alert-level Postgres dashboards show.
+  - name: OpenSearch Events
+    uid: opensearch-events
+    type: grafana-opensearch-datasource
+    access: proxy
+    url: http://opensearch:9200
+    jsonData:
+      database: "[events-]YYYY.MM.DD"
+      timeField: timestamp
+      version: "2.17.0"
+      flavor: opensearch
+    isDefault: false
+    editable: true

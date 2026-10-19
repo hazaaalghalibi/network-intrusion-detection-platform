@@ -1,0 +1,18 @@
+[
+  { "ip": "10.0.0.10", "hostname": "srv-jump-01",   "asset_type": "server",      "role": "Internet-facing SSH bastion", "criticality": "high",     "owner": "IT" },
+  { "ip": "10.0.0.11", "hostname": "srv-web-01",    "asset_type": "server",      "role": "Public web server",           "criticality": "high",     "owner": "Engineering" },
+  { "ip": "10.0.0.12", "hostname": "srv-db-01",     "asset_type": "server",      "role": "Primary database server",     "criticality": "critical", "owner": "Engineering" },
+  { "ip": "10.0.0.13", "hostname": "srv-dc-01",     "asset_type": "server",      "role": "Domain controller",           "criticality": "critical", "owner": "IT" },
+  { "ip": "10.0.0.14", "hostname": "srv-file-01",   "asset_type": "server",      "role": "File server",                 "criticality": "medium",   "owner": "IT" },
+  { "ip": "10.0.0.29", "hostname": "srv-dns-01",    "asset_type": "server",      "role": "Internal DNS resolver",       "criticality": "high",     "owner": "IT" },
+  { "ip": "10.0.0.30", "hostname": "srv-backup-01", "asset_type": "server",      "role": "Backup server",               "criticality": "high",     "owner": "IT" },
+  { "ip": "10.0.0.20", "hostname": "ws-fin-01",     "asset_type": "workstation", "role": "Finance workstation",         "criticality": "medium",   "owner": "Finance" },
+  { "ip": "10.0.0.21", "hostname": "ws-fin-02",     "asset_type": "workstation", "role": "Finance workstation",         "criticality": "medium",   "owner": "Finance" },
+  { "ip": "10.0.0.22", "hostname": "ws-hr-01",      "asset_type": "workstation", "role": "HR workstation",              "criticality": "medium",   "owner": "HR" },
+  { "ip": "10.0.0.23", "hostname": "ws-eng-01",     "asset_type": "workstation", "role": "Engineering workstation",     "criticality": "medium",   "owner": "Engineering" },
+  { "ip": "10.0.0.24", "hostname": "ws-eng-02",     "asset_type": "workstation", "role": "Engineering workstation",     "criticality": "medium",   "owner": "Engineering" },
+  { "ip": "10.0.0.25", "hostname": "ws-eng-03",     "asset_type": "workstation", "role": "Engineering workstation",     "criticality": "medium",   "owner": "Engineering" },
+  { "ip": "10.0.0.26", "hostname": "ws-sales-01",   "asset_type": "workstation", "role": "Sales workstation",           "criticality": "low",      "owner": "Sales" },
+  { "ip": "10.0.0.27", "hostname": "ws-sales-02",   "asset_type": "workstation", "role": "Sales workstation",           "criticality": "low",      "owner": "Sales" },
+  { "ip": "10.0.0.28", "hostname": "ws-it-01",      "asset_type": "workstation", "role": "IT admin workstation",        "criticality": "high",     "owner": "IT" }
+]

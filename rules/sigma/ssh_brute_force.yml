@@ -1,0 +1,35 @@
+title: SSH Brute Force Followed by Successful Authentication
+id: 8f1a1e2e-1b3a-4b1a-9c1a-000000000002
+status: stable
+description: >
+  Repeated SSH authentication failures from one source to one destination
+  within a short window is a brute-force signature; a success shortly after
+  such a burst is treated as a likely compromise and escalated to critical.
+  Implemented as internal/detect/bruteforce.go using a Redis sorted set per
+  src->dst pair, scored by event timestamp.
+author: NIDR platform (demo)
+date: 2026/06/30
+references:
+  - go/internal/detect/bruteforce.go
+logsource:
+  category: authentication
+  product: zeek
+  service: ssh
+detection:
+  failures:
+    auth_success: F
+  success:
+    auth_success: T
+  timeframe: 120s
+  condition: >
+    (failures | count() by src_ip, dst_ip > 6)
+    or (success following >= 4 failures for the same src_ip, dst_ip within timeframe)
+falsepositives:
+  - Legitimate users mistyping credentials repeatedly
+  - Automated deployment/config-management tools with misconfigured credentials
+level: high
+tags:
+  - attack.credential_access
+  - attack.t1110
+  - attack.initial_access
+  - attack.t1078

@@ -1,0 +1,31 @@
+title: Connection to or DNS Query for a Known-Malicious Indicator
+id: 8f1a1e2e-1b3a-4b1a-9c1a-000000000004
+status: stable
+description: >
+  Either side of a network connection (Zeek conn.log or a Suricata alert) or
+  a DNS query matches a local threat-intel blocklist
+  (data/threat_intel/malicious_ips.csv / malicious_domains.csv). Implemented
+  as internal/detect/badip.go (IP matches) and internal/detect/dns.go
+  (domain matches); severity is escalated by the blocklist confidence level.
+author: NIDR platform (demo)
+date: 2026/06/30
+references:
+  - go/internal/detect/badip.go
+  - go/internal/detect/dns.go
+  - go/internal/threatintel/threatintel.go
+logsource:
+  category: network_connection
+  product: zeek
+detection:
+  selection_ip:
+    src_ip|in|expand: '%malicious_ips%'
+    dst_ip|in|expand: '%malicious_ips%'
+  selection_domain:
+    query|in|expand: '%malicious_domains%'
+  condition: selection_ip or selection_domain
+falsepositives:
+  - Stale/incorrect threat intel entries
+level: high
+tags:
+  - attack.command_and_control
+  - attack.t1071

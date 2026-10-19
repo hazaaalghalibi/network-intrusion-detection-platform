@@ -1,0 +1,8 @@
+# SAMPLE / SYNTHETIC threat intel for demo purposes only.
+# All domains use the .test TLD, reserved by RFC 2606 for testing and
+# guaranteed never to resolve on the real internet.
+domain,category,source,confidence,first_seen,description
+badc2exfil.test,c2,sample-feed,high,2026-06-15,DNS tunneling / C2 domain used by simulated implant in this demo dataset
+phish-login.test,phishing,sample-feed,medium,2026-05-20,Credential phishing domain (sample data)
+malware-drop.test,malware,sample-feed,medium,2026-05-22,Malware staging domain (sample data)
+ransom-payment.test,ransomware,sample-feed,high,2026-06-01,Ransomware payment portal (sample data)

@@ -1,0 +1,33 @@
+title: Regular-Interval Connections Consistent with C2 Beaconing
+id: 8f1a1e2e-1b3a-4b1a-9c1a-000000000006
+status: stable
+description: >
+  A source connects to the same destination host:port at a near-constant
+  interval — low variance in inter-connection timing is atypical of
+  human-driven traffic and consistent with C2 beaconing. Implemented as
+  internal/detect/beacon.go: tracks connection timestamps per
+  src->dst:port over a 40-minute window and fires when the coefficient of
+  variation (stddev/mean) of inter-arrival times is <= 0.15 across >= 6
+  samples with a 5s-15m mean interval.
+author: NIDR platform (demo)
+date: 2026/06/30
+references:
+  - go/internal/detect/beacon.go
+logsource:
+  category: network_connection
+  product: zeek
+  service: conn
+detection:
+  selection:
+    proto: tcp
+  timeframe: 40m
+  condition: >
+    selection | count() by src_ip, dst_ip, dst_port >= 6
+    and stddev(interval)/mean(interval) <= 0.15
+falsepositives:
+  - Legitimate polling/heartbeat services (monitoring agents, health checks, NTP)
+level: high
+tags:
+  - attack.command_and_control
+  - attack.t1071
+  - attack.t1008

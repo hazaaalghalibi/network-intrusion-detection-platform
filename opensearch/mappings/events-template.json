@@ -1,0 +1,37 @@
+{
+  "index_patterns": ["events-*"],
+  "template": {
+    "settings": {
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    },
+    "mappings": {
+      "properties": {
+        "id":                  { "type": "keyword" },
+        "timestamp":           { "type": "date" },
+        "source":              { "type": "keyword" },
+        "src_ip":              { "type": "ip" },
+        "src_port":            { "type": "integer" },
+        "dst_ip":              { "type": "ip" },
+        "dst_port":            { "type": "integer" },
+        "proto":               { "type": "keyword" },
+        "service":             { "type": "keyword" },
+        "duration":            { "type": "float" },
+        "orig_bytes":          { "type": "long" },
+        "resp_bytes":          { "type": "long" },
+        "conn_state":          { "type": "keyword" },
+        "dns_query":           { "type": "keyword" },
+        "dns_qtype":           { "type": "keyword" },
+        "dns_rcode":           { "type": "keyword" },
+        "ssh_auth_success":    { "type": "boolean" },
+        "ssh_auth_attempts":   { "type": "integer" },
+        "suricata_signature":  {
+          "type": "text",
+          "fields": { "keyword": { "type": "keyword", "ignore_above": 256 } }
+        },
+        "suricata_category":   { "type": "keyword" },
+        "suricata_severity":   { "type": "integer" }
+      }
+    }
+  }
+}

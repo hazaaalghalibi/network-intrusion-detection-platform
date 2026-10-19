@@ -1,0 +1,27 @@
+title: High-Volume Outbound Traffic (Possible Exfiltration)
+id: 8f1a1e2e-1b3a-4b1a-9c1a-000000000005
+status: stable
+description: >
+  A single source transfers an unusually large volume of bytes within a
+  short window, which may indicate data exfiltration. Implemented as
+  internal/detect/volume.go: sums orig_bytes+resp_bytes per source IP over a
+  10-minute Redis-backed sliding window; >150MB fires the alert.
+author: NIDR platform (demo)
+date: 2026/06/30
+references:
+  - go/internal/detect/volume.go
+logsource:
+  category: network_connection
+  product: zeek
+  service: conn
+detection:
+  selection:
+    proto: tcp
+  timeframe: 10m
+  condition: selection | sum(orig_bytes + resp_bytes) by src_ip > 157286400
+falsepositives:
+  - Legitimate large file transfers, backups, or software updates
+level: high
+tags:
+  - attack.exfiltration
+  - attack.t1041

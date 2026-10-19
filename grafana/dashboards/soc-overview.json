@@ -1,0 +1,219 @@
+{
+  "title": "NIDR - SOC Overview",
+  "uid": "nidr-soc-overview",
+  "schemaVersion": 39,
+  "version": 1,
+  "editable": true,
+  "timezone": "utc",
+  "time": { "from": "2026-06-29T00:00:00.000Z", "to": "2026-07-01T00:00:00.000Z" },
+  "refresh": "30s",
+  "tags": ["nidr", "soc"],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Total Alerts",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT count(*) AS total FROM alerts WHERE $__timeFilter(created_at)" }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Critical Alerts",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }] } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT count(*) AS critical FROM alerts WHERE $__timeFilter(created_at) AND severity = 'critical'" }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Open Alerts",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "orange", "value": null }] } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT count(*) AS open FROM alerts WHERE $__timeFilter(created_at) AND status = 'open'" }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Threat Intel Matches",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "purple", "value": null }] } },
+        "overrides": []
+      },
+      "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "value", "graphMode": "none" },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT count(*) AS ti_matches FROM alerts WHERE $__timeFilter(created_at) AND jsonb_array_length(threat_intel) > 0" }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "Alerts Over Time (by severity)",
+      "description": "Alert volume bucketed hourly, split by severity so a spike is immediately legible as escalation, not just noise.",
+      "gridPos": { "h": 9, "w": 16, "x": 0, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "custom": { "drawStyle": "bars", "fillOpacity": 60, "lineWidth": 1, "stacking": { "mode": "normal" } }, "unit": "short" },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "critical" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byName", "options": "high" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "medium" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+          { "matcher": { "id": "byName", "options": "low" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "time_series",
+          "rawSql": "SELECT date_trunc('hour', created_at) AS time, severity AS metric, count(*) AS value FROM alerts WHERE $__timeFilter(created_at) GROUP BY 1, 2 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "piechart",
+      "title": "Severity Breakdown",
+      "gridPos": { "h": 9, "w": 8, "x": 16, "y": 4 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "palette-classic" } },
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "critical" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byName", "options": "high" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+          { "matcher": { "id": "byName", "options": "medium" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+          { "matcher": { "id": "byName", "options": "low" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "right", "values": ["value", "percent"] }, "displayLabels": [] },
+      "targets": [
+        { "refId": "A", "format": "table", "rawSql": "SELECT severity, count(*) AS count FROM alerts WHERE $__timeFilter(created_at) GROUP BY severity" }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "bargauge",
+      "title": "Top Suspicious IPs",
+      "description": "Source IPs ranked by number of alerts they triggered.",
+      "gridPos": { "h": 8, "w": 8, "x": 0, "y": 13 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "continuous-blues" }, "min": 0 },
+        "overrides": []
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT src_ip, count(*) AS alert_count FROM alerts WHERE $__timeFilter(created_at) AND src_ip IS NOT NULL GROUP BY src_ip ORDER BY alert_count DESC LIMIT 10"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "bargauge",
+      "title": "Affected Internal Hosts",
+      "description": "Internal assets named on at least one alert, ranked by alert count.",
+      "gridPos": { "h": 8, "w": 8, "x": 8, "y": 13 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "continuous-purples" }, "min": 0 },
+        "overrides": []
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT asset_hostname, count(*) AS alert_count FROM alerts WHERE $__timeFilter(created_at) AND asset_hostname IS NOT NULL AND asset_hostname <> '' GROUP BY asset_hostname ORDER BY alert_count DESC"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "bargauge",
+      "title": "Most Common Alert Types",
+      "gridPos": { "h": 8, "w": 8, "x": 16, "y": 13 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "color": { "mode": "continuous-greens" }, "min": 0 },
+        "overrides": []
+      },
+      "options": { "displayMode": "gradient", "orientation": "horizontal", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT alert_type, count(*) AS count FROM alerts WHERE $__timeFilter(created_at) GROUP BY alert_type ORDER BY count DESC"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "table",
+      "title": "Threat Intelligence Matches",
+      "description": "Every alert enriched with a local threat-intel hit, with the matched indicator and its category/confidence.",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 21 },
+      "datasource": { "type": "postgres", "uid": "postgres-nidr" },
+      "fieldConfig": {
+        "defaults": { "custom": { "align": "left" } },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "severity" },
+            "properties": [
+              { "id": "custom.cellOptions", "value": { "type": "color-background" } },
+              { "id": "color", "value": { "mode": "fixed" } },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "critical": { "color": "red", "index": 0 },
+                      "high": { "color": "orange", "index": 1 },
+                      "medium": { "color": "yellow", "index": 2 },
+                      "low": { "color": "green", "index": 3 }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "refId": "A",
+          "format": "table",
+          "rawSql": "SELECT a.created_at AS time, a.title, a.severity, elem->>'indicator' AS indicator, elem->>'indicator_type' AS indicator_type, elem->>'category' AS category, elem->>'confidence' AS confidence FROM alerts a CROSS JOIN LATERAL jsonb_array_elements(a.threat_intel) AS elem WHERE $__timeFilter(a.created_at) ORDER BY a.created_at DESC"
+        }
+      ]
+    }
+  ]
+}

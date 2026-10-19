@@ -1,0 +1,13 @@
+# SAMPLE / SYNTHETIC threat intel for demo purposes only.
+# All addresses are drawn from RFC 5737 documentation ranges
+# (192.0.2.0/24, 198.51.100.0/24, 203.0.113.0/24) and are NOT real-world
+# malicious infrastructure. This file plays the role of a local blocklist
+# an analyst might pull from a commercial feed or MISP instance.
+ip,category,source,confidence,first_seen,description
+198.51.100.23,scanner,internal-honeypot,high,2026-06-18,Recon host observed brute-forcing SSH across multiple demo ranges
+203.0.113.66,c2,sample-feed,high,2026-06-20,Beaconing C2 endpoint used by simulated implant in this demo dataset
+198.51.100.77,exfil,sample-feed,high,2026-06-25,Data exfiltration drop point observed in this demo dataset
+203.0.113.99,botnet,sample-feed,medium,2026-05-02,Botnet member IP (sample data, not observed in this demo's traffic)
+192.0.2.55,malware,sample-feed,medium,2026-05-14,Malware distribution host (sample data, not observed in this demo's traffic)
+198.51.100.200,phishing,sample-feed,low,2026-04-30,Phishing kit host (sample data, not observed in this demo's traffic)
+192.0.2.140,scanner,sample-feed,low,2026-04-11,Internet-wide scanner (sample data, not observed in this demo's traffic)

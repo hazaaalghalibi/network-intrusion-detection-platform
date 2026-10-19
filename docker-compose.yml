@@ -1,0 +1,169 @@
+name: nidr
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:2.17.0
+    container_name: nidr-opensearch
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true   # local demo only — see README "Security notes"
+      - "OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m"
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+    ulimits:
+      memlock: { soft: -1, hard: -1 }
+      nofile: { soft: 65536, hard: 65536 }
+    ports:
+      - "9200:9200"
+    volumes:
+      - opensearch-data:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  opensearch-init:
+    image: curlimages/curl:8.10.1
+    container_name: nidr-opensearch-init
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    volumes:
+      - ./opensearch/mappings:/mappings:ro
+      - ./opensearch/init.sh:/init.sh:ro
+    entrypoint: ["sh", "/init.sh"]
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: nidr-postgres
+    environment:
+      POSTGRES_USER: nidr
+      POSTGRES_PASSWORD: nidr_dev_password
+      POSTGRES_DB: nidr
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql/schema.sql:/docker-entrypoint-initdb.d/01_schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nidr -d nidr"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    container_name: nidr-redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  grafana:
+    image: grafana/grafana-oss:11.2.0
+    container_name: nidr-grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+      - GF_INSTALL_PLUGINS=grafana-opensearch-datasource
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    depends_on:
+      opensearch:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+
+  seed-assets:
+    image: python:3.11-slim
+    container_name: nidr-seed-assets
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+      - ./data:/data:ro
+    working_dir: /scripts
+    command: ["sh", "-c", "pip install --no-cache-dir psycopg2-binary >/dev/null && python seed_assets.py"]
+    environment:
+      - POSTGRES_DSN=postgresql://nidr:nidr_dev_password@postgres:5432/nidr
+
+  ingest:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.ingest
+    container_name: nidr-ingest
+    depends_on:
+      opensearch-init:
+        condition: service_completed_successfully
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./data:/data:ro
+      - ./rules/yara:/rules/yara:ro
+    environment:
+      - OPENSEARCH_URL=http://opensearch:9200
+      - REDIS_ADDR=redis:6379
+      - SAMPLE_LOGS_DIR=/data/sample_logs
+      - MALWARE_SAMPLES_DIR=/data/malware_samples
+      - YARA_RULES_DIR=/rules/yara
+      - THREAT_INTEL_DIR=/data/threat_intel
+
+  worker:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.worker
+    container_name: nidr-worker
+    depends_on:
+      opensearch-init:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      - OPENSEARCH_URL=http://opensearch:9200
+      - REDIS_ADDR=redis:6379
+      - POSTGRES_DSN=postgresql://nidr:nidr_dev_password@postgres:5432/nidr
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./go
+      dockerfile: Dockerfile.api
+    container_name: nidr-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      opensearch:
+        condition: service_healthy
+    environment:
+      - OPENSEARCH_URL=http://opensearch:9200
+      - POSTGRES_DSN=postgresql://nidr:nidr_dev_password@postgres:5432/nidr
+      - LISTEN_ADDR=:8080
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nidr-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - api
+      - grafana
+
+volumes:
+  opensearch-data:
+  postgres-data:
+  grafana-data:

@@ -1,0 +1,31 @@
+title: Possible DNS Tunneling via High-Entropy Subdomains
+id: 8f1a1e2e-1b3a-4b1a-9c1a-000000000003
+status: stable
+description: >
+  Repeated DNS queries for long, high-entropy subdomain labels are
+  consistent with DNS tunneling or C2-over-DNS. Implemented as
+  internal/detect/dns.go: labels >= 20 chars with Shannon entropy >= 3.3
+  bits/char are counted per source IP in a 5-minute Redis-backed sliding
+  window; 8+ in the window fires the alert.
+author: NIDR platform (demo)
+date: 2026/06/30
+references:
+  - go/internal/detect/dns.go
+logsource:
+  category: dns
+  product: zeek
+  service: dns
+detection:
+  selection:
+    query|re: '^[a-z0-9]{20,}\.'
+  timeframe: 5m
+  condition: selection | count() by src_ip >= 8
+falsepositives:
+  - CDN / cloud provider subdomains that happen to look random
+  - Some legitimate telemetry/beacon services use long opaque subdomains
+level: high
+tags:
+  - attack.command_and_control
+  - attack.t1071.004
+  - attack.exfiltration
+  - attack.t1048.003
